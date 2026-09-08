@@ -1,0 +1,31 @@
+{
+  "habits": [
+    {
+      "id": "shabbat",
+      "name": "Mode Shabbat : ne rien faire",
+      "why": "Retrouver la capacité de ne rien faire sans portable : marcher, regarder, laisser mes pensées divaguer. C'est le projet que j'ai vraiment envie de réussir.",
+      "target_performance": "Tenir 45 minutes d'affilée sans portable, sans écran, sans musique ni podcast, sans tâche : juste marcher ou regarder, et laisser mes pensées divaguer sans craquer.",
+      "target_hours": 20,
+      "burst_minutes": 20,
+      "subskills": [
+        "Poser le portable dans une autre pièce (ou l'éteindre) avant de commencer",
+        "Marcher sans destination ni objectif",
+        "Rester assis et regarder dehors sans rien faire",
+        "Remarquer l'envie d'attraper le téléphone et la laisser passer",
+        "Laisser les pensées divaguer sans les diriger ni les noter"
+      ],
+      "tools": [
+        "Un minuteur physique, une montre ou ce script (pas le téléphone)",
+        "Une chaise près d'une fenêtre, un banc ou un chemin de marche",
+        "Un créneau fixe dans la journée, toujours le même si possible"
+      ],
+      "checklist": [
+        "Portable hors de portée : autre pièce, éteint ou en mode avion dans un tiroir",
+        "Pas d'écouteurs, pas de musique, pas de podcast",
+        "Personne ne m'attend pendant les prochaines minutes",
+        "Je sais où je vais marcher ou où je vais m'asseoir",
+        "Je ne cherche rien à obtenir de cette session : juste être là"
+      ]
+    }
+  ]
+}
