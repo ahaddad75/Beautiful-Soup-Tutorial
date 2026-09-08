@@ -1,0 +1,500 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>20 heures · traqueur d'habitudes</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27%3E%3Ccircle cx=%2750%27 cy=%2750%27 r=%2745%27 fill=%27%232f6f5e%27/%3E%3C/svg%3E">
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #f6f4ee; --card: #ffffff; --ink: #1f2320; --muted: #6b716c; --line: #e3e0d7;
+    --accent: #2f6f5e; --accent-ink: #ffffff; --soft: #e7f0ec; --warn: #b4552c; --bar: #dcd8cc;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #15181a; --card: #1e2226; --ink: #ebe8e0; --muted: #9aa19b; --line: #2d3338;
+            --accent: #6fb79f; --accent-ink: #10201a; --soft: #22302b; --warn: #e08a5f; --bar: #2f363b; }
+  }
+  * { box-sizing: border-box; }
+  button, input, select { font: inherit; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+         font: 16px/1.5 -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+  main { max-width: 760px; margin: 0 auto; padding: 24px 16px 80px; }
+  h1 { font-size: 1.6rem; margin: 0 0 4px; }
+  h2 { font-size: 1.1rem; margin: 0 0 12px; }
+  h3 { font-size: 1rem; margin: 16px 0 6px; }
+  p { margin: 0 0 10px; }
+  .sub { color: var(--muted); margin-bottom: 20px; }
+  .tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+  .tabs button { border: 1px solid var(--line); background: var(--card); color: var(--ink);
+                 padding: 8px 12px; border-radius: 999px; cursor: pointer; font-size: 0.95rem; }
+  .tabs button.active { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 18px; margin-bottom: 16px; }
+  .bar { height: 14px; background: var(--bar); border-radius: 7px; overflow: hidden; margin: 8px 0; }
+  .bar > div { height: 100%; background: var(--accent); width: 0; transition: width .4s; }
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-top: 10px; }
+  .stat { background: var(--soft); border-radius: 8px; padding: 10px; }
+  .stat b { display: block; font-size: 1.3rem; }
+  .stat span { color: var(--muted); font-size: 0.85rem; }
+  .week { display: flex; gap: 6px; margin-top: 8px; }
+  .week div { flex: 1; text-align: center; padding: 6px 0; border-radius: 6px; background: var(--bar); font-size: 0.85rem; }
+  .week div.some { background: var(--soft); }
+  .week div.real { background: var(--accent); color: var(--accent-ink); }
+  .muted { color: var(--muted); font-size: 0.9rem; }
+  button.primary { background: var(--accent); color: var(--accent-ink); border: 0; padding: 10px 16px;
+                   border-radius: 8px; font-size: 1rem; cursor: pointer; }
+  button.ghost { background: transparent; color: var(--ink); border: 1px solid var(--line); padding: 8px 12px;
+                 border-radius: 8px; cursor: pointer; }
+  button:disabled { opacity: .5; cursor: not-allowed; }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 10px; }
+  label.check { display: block; padding: 6px 0; cursor: pointer; }
+  label.check input { margin-right: 8px; }
+  .timer { font-size: 3.5rem; text-align: center; font-variant-numeric: tabular-nums; margin: 12px 0; }
+  form label { display: block; margin-top: 10px; font-weight: 600; }
+  input[type=number], input[type=date], input[type=text], select {
+    width: 100%; padding: 8px; border: 1px solid var(--line); border-radius: 8px;
+    background: var(--bg); color: var(--ink); font-size: 1rem; }
+  .quality label { font-weight: 400; margin-top: 4px; }
+  .quality input { margin-right: 8px; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+  th, td { text-align: left; padding: 6px 4px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  td.del { text-align: right; }
+  td.del button { font-size: 0.8rem; }
+  ol, ul { padding-left: 20px; margin: 0 0 8px; }
+  li { margin-bottom: 6px; }
+  .src { color: var(--muted); font-size: 0.85rem; display: block; }
+  details summary { cursor: pointer; font-weight: 600; margin-bottom: 8px; }
+  .notice { background: var(--soft); border-left: 4px solid var(--warn); padding: 10px 12px; border-radius: 8px; margin-bottom: 16px; }
+  [hidden] { display: none !important; }
+  footer { color: var(--muted); font-size: 0.85rem; margin-top: 30px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>20 heures</h1>
+  <p class="sub">Ne rien faire. Une seule chose à la fois. Traqueur d'habitudes façon <em>The First 20 Hours</em> (Josh Kaufman).</p>
+
+  <div id="load-error" class="notice" hidden></div>
+
+  <div class="tabs" id="tabs"></div>
+
+  <section class="card" id="status"></section>
+
+  <section class="card" id="practice">
+    <h2 id="practice-title">Pratiquer</h2>
+    <div id="practice-idle">
+      <p class="muted" id="practice-hint"></p>
+      <div class="row">
+        <button class="primary" id="btn-start">Démarrer une session</button>
+        <button class="ghost" id="btn-log">Enregistrer après coup</button>
+      </div>
+    </div>
+
+    <div id="practice-checklist" hidden>
+      <p>Avant de commencer, élimine les barrières :</p>
+      <div id="checklist"></div>
+      <div class="row">
+        <label>Durée (min) <input type="number" id="start-minutes" min="1" style="width:90px;margin-left:6px"></label>
+        <button class="primary" id="btn-go" disabled>Lancer le minuteur</button>
+        <button class="ghost" id="btn-cancel-1">Annuler</button>
+      </div>
+    </div>
+
+    <div id="practice-timer" hidden>
+      <div class="timer" id="clock">20:00</div>
+      <p class="muted" style="text-align:center">Pose le portable ailleurs. Ne regarde plus l'écran. Un son te préviendra.</p>
+      <div class="row" style="justify-content:center">
+        <button class="ghost" id="btn-stop">Arrêter maintenant (la session compte quand même)</button>
+      </div>
+    </div>
+
+    <form id="practice-form" hidden>
+      <p id="form-intro" class="muted"></p>
+      <div id="minutes-field">
+        <label>Durée en minutes <input type="number" name="minutes" min="1" required></label>
+      </div>
+      <label>Date <input type="date" name="date" required></label>
+      <label id="clean-question">Contrainte respectée ?</label>
+      <label class="check" style="font-weight:400"><input type="radio" name="clean" value="1" checked> Oui</label>
+      <label class="check" style="font-weight:400"><input type="radio" name="clean" value="0"> Non</label>
+      <label>Honnêtement, c'était :</label>
+      <div class="quality" id="quality"></div>
+      <label>Note (facultatif) <input type="text" name="note" maxlength="140"></label>
+      <div class="row">
+        <button class="primary" type="submit">Enregistrer</button>
+        <button class="ghost" type="button" id="btn-cancel-2">Annuler</button>
+      </div>
+    </form>
+    <p id="feedback" class="muted"></p>
+  </section>
+
+  <section class="card">
+    <details open>
+      <summary>Pourquoi, cible, sous-compétences</summary>
+      <div id="deconstruct"></div>
+    </details>
+  </section>
+
+  <section class="card">
+    <details>
+      <summary>Ce que disent les études</summary>
+      <ol id="science"></ol>
+    </details>
+  </section>
+
+  <section class="card">
+    <details>
+      <summary>La méthode : Kaufman, la science, et penser comme avant</summary>
+      <h3>Les 10 principes de <em>The First 20 Hours</em></h3>
+      <ol>
+        <li>Choisir un projet qu'on aime vraiment.</li>
+        <li>Une seule compétence à la fois.</li>
+        <li>Définir un niveau cible précis et observable.</li>
+        <li>Déconstruire la compétence en sous-compétences.</li>
+        <li>Se procurer les outils critiques.</li>
+        <li>Éliminer les barrières à la pratique.</li>
+        <li>Réserver du temps de pratique dans l'agenda.</li>
+        <li>Créer des boucles de feedback rapides.</li>
+        <li>Pratiquer par courtes rafales chronométrées.</li>
+        <li>Viser la quantité et la vitesse avant la perfection.</li>
+      </ol>
+      <h3>Ce que la recherche confirme</h3>
+      <ol id="method-science"></ol>
+      <h3>Penser comme avant</h3>
+      <p>On est en multitâche permanent, et on ne prend plus jamais le temps de juste penser. Ceux qu'on cite comme génies faisaient exactement l'inverse.</p>
+      <ul>
+        <li><b>Darwin</b> marchait chaque jour plusieurs tours de son « Sandwalk », un chemin qu'il avait fait aménager à Down House pour réfléchir en marchant.</li>
+        <li><b>Einstein</b> a construit la relativité sur des expériences de pensée (courir à côté d'un rayon de lumière, tomber en chute libre) menées sans matériel, en marchant, en faisant du voilier ou du violon.</li>
+        <li><b>Poincaré</b> raconte que la solution des fonctions fuchsiennes lui est venue en posant le pied sur le marchepied d'un omnibus, après avoir cessé d'y travailler (<em>Science et méthode</em>, 1908).</li>
+        <li><b>Kant</b> faisait sa promenade quotidienne à Königsberg à heure si fixe que les voisins réglaient leur montre dessus.</li>
+        <li><b>Nietzsche</b> : « Seules les pensées qu'on a en marchant ont de la valeur » (<em>Crépuscule des idoles</em>, 1888).</li>
+      </ul>
+      <p class="muted">La science ci-dessus dit la même chose avec des IRM : le cerveau au repos travaille, et la marche sans écran restaure l'attention.</p>
+    </details>
+  </section>
+
+  <section class="card">
+    <h2>Historique</h2>
+    <div style="overflow-x:auto"><table id="history"></table></div>
+  </section>
+
+  <section class="card">
+    <h2>Données</h2>
+    <p class="muted">Les sessions sont enregistrées dans ce navigateur (localStorage). Exporte-les pour les commiter dans <code>data/sessions.json</code>, le script Python lit le même format.</p>
+    <div class="row">
+      <button class="ghost" id="btn-export">Exporter sessions.json</button>
+      <label class="ghost" style="padding:8px 12px;border:1px solid var(--line);border-radius:8px;cursor:pointer">
+        Importer un JSON <input type="file" id="file-import" accept="application/json" hidden>
+      </label>
+      <button class="ghost" id="btn-reset">Tout effacer</button>
+    </div>
+  </section>
+
+  <footer>Code et données : <a href="https://github.com/ahaddad75/Beautiful-Soup-Tutorial">GitHub</a>. Aucune donnée n'est envoyée nulle part.</footer>
+</main>
+
+<script>
+(() => {
+  const STORAGE_KEY = "habits.sessions.v1";
+  const REAL_QUALITY_MIN = 4;
+  const DEFAULT_QUALITY = { 1: "J'ai craqué ou abandonné", 2: "Difficile, surtout attendu que ça passe",
+    3: "Moitié présent, moitié ailleurs", 4: "Bien, quelques dérives vite rattrapées", 5: "Pleinement dans l'activité" };
+  const DEFAULT_CLEAN = "La contrainte de l'habitude a été respectée tout le long ?";
+  const WEEKDAYS = ["L", "M", "M", "J", "V", "S", "D"];
+  const MONTHS = ["janv.", "févr.", "mars", "avr.", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.", "déc."];
+
+  let config = { habits: [], method_science: [] };
+  let sessions = [];
+  let current = null;
+  let timer = null;
+
+  const $ = (id) => document.getElementById(id);
+  const isDays = (h) => (h.unit || "minutes") === "days";
+  const isReal = (s, h) => isDays(h) ? !!s.clean : (!!s.clean && s.quality >= REAL_QUALITY_MIN);
+  const iso = (d) => d.toISOString().slice(0, 10);
+  const localIso = (d) => { const z = new Date(d.getTime() - d.getTimezoneOffset() * 60000); return z.toISOString().slice(0, 10); };
+  const parseDay = (s) => { const [y, m, d] = s.split("-").map(Number); return new Date(y, m - 1, d); };
+  const addDays = (d, n) => { const r = new Date(d); r.setDate(r.getDate() + n); return r; };
+  const fmtDate = (d) => `${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()}`;
+  const fmtHours = (m) => { const h = Math.floor(m / 60), r = m % 60; return h && r ? `${h}h${String(r).padStart(2, "0")}` : h ? `${h}h` : `${r} min`; };
+  const fmtAmount = (v, unit) => unit === "days" ? `${v} jour${v === 1 ? "" : "s"}` : fmtHours(v);
+  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+  function loadSessions() {
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]"); } catch (e) { return []; }
+  }
+  function saveSessions() {
+    sessions.sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(sessions)); } catch (e) { alert("Impossible d'enregistrer dans ce navigateur."); }
+  }
+
+  // Même logique que compute_stats() dans habits.py.
+  function computeStats(habit, all, today = new Date()) {
+    today = parseDay(localIso(today));
+    const daysMode = isDays(habit);
+    const mine = all.filter((s) => s.habit === habit.id);
+    const real = mine.filter((s) => isReal(s, habit));
+    let total, target, streakDays;
+    if (daysMode) {
+      const byDay = {};
+      mine.forEach((s) => { byDay[s.date] = (byDay[s.date] ?? true) && !!s.clean; });
+      streakDays = new Set(Object.keys(byDay).filter((d) => byDay[d]));
+      total = streakDays.size;
+      target = habit.target_days || 90;
+    } else {
+      total = mine.reduce((a, s) => a + s.minutes, 0);
+      target = Math.round((habit.target_hours || 20) * 60);
+      streakDays = new Set(mine.map((s) => s.date));
+    }
+    let streak = 0;
+    let cursor = streakDays.has(localIso(today)) ? today : addDays(today, -1);
+    while (streakDays.has(localIso(cursor))) { streak++; cursor = addDays(cursor, -1); }
+
+    const monday = addDays(today, -((today.getDay() + 6) % 7));
+    const weekGrid = [];
+    for (let i = 0; i < 7; i++) {
+      const day = localIso(addDays(monday, i));
+      const ds = mine.filter((s) => s.date === day);
+      if (!ds.length) weekGrid.push("none");
+      else if (daysMode) weekGrid.push(ds.every((s) => s.clean) ? "real" : "some");
+      else weekGrid.push(ds.some((s) => isReal(s, habit)) ? "real" : "some");
+    }
+    const weekSessions = mine.filter((s) => s.date >= localIso(monday));
+    const weekTotal = daysMode ? new Set(weekSessions.filter((s) => s.clean).map((s) => s.date)).size
+                               : weekSessions.reduce((a, s) => a + s.minutes, 0);
+
+    const windowStart = localIso(addDays(today, -13));
+    const recentTotal = daysMode ? [...streakDays].filter((d) => d >= windowStart).length
+                                 : mine.filter((s) => s.date >= windowStart).reduce((a, s) => a + s.minutes, 0);
+    const pace = recentTotal / 14;
+    const remaining = Math.max(target - total, 0);
+    const eta = remaining === 0 ? today : pace > 0 ? addDays(today, Math.round(remaining / pace)) : null;
+    return { unit: daysMode ? "days" : "minutes", sessions: mine.length, real: real.length, total, target, remaining,
+      percent: target ? Math.min(100, 100 * total / target) : 0, streak, weekSessions: weekSessions.length, weekTotal,
+      weekGrid, pace, eta, avgQuality: mine.length ? mine.reduce((a, s) => a + s.quality, 0) / mine.length : 0,
+      longest: Math.max(0, ...mine.map((s) => s.minutes)) };
+  }
+
+  // ----- rendu -----
+  function renderTabs() {
+    $("tabs").innerHTML = config.habits.map((h) =>
+      `<button data-id="${h.id}" class="${current && h.id === current.id ? "active" : ""}">${esc(h.name)}</button>`).join("");
+    $("tabs").querySelectorAll("button").forEach((b) => b.onclick = () => selectHabit(b.dataset.id));
+  }
+
+  function renderStatus() {
+    const h = current, st = computeStats(h, sessions);
+    const realLabel = isDays(h) ? "jours tenus" : "« vraiment réussies »";
+    let pace;
+    if (st.remaining === 0) pace = "Objectif atteint. Fixe un nouveau niveau cible dans habits.json.";
+    else if (st.eta) pace = `Rythme sur 14 jours : ${isDays(h) ? (st.pace * 7).toFixed(1) + " jours tenus/semaine" : Math.round(st.pace) + " min/jour"} → objectif atteint vers le ${fmtDate(st.eta)}.`;
+    else pace = "Pas encore de rythme : lance une première session.";
+    $("status").innerHTML = `
+      <h2>${esc(h.name)}</h2>
+      <div class="bar"><div style="width:${st.percent}%"></div></div>
+      <p><b>${fmtAmount(st.total, st.unit)}</b> sur ${fmtAmount(st.target, st.unit)} (${Math.round(st.percent)} %)</p>
+      <div class="stats">
+        <div class="stat"><b>${st.real}${isDays(h) ? "" : " / " + st.sessions}</b><span>${realLabel}</span></div>
+        <div class="stat"><b>${st.streak}</b><span>jour(s) d'affilée</span></div>
+        <div class="stat"><b>${isDays(h) ? st.weekTotal + " j" : fmtHours(st.weekTotal)}</b><span>cette semaine</span></div>
+        <div class="stat"><b>${st.sessions ? st.avgQuality.toFixed(1) : "–"}</b><span>qualité moyenne /5</span></div>
+      </div>
+      <div class="week">${st.weekGrid.map((g, i) => `<div class="${g}">${WEEKDAYS[i]}</div>`).join("")}</div>
+      <p class="muted" style="margin-top:10px">${pace}</p>`;
+  }
+
+  function renderPractice() {
+    const h = current;
+    $("practice-hint").textContent = isDays(h)
+      ? "Habitude suivie en jours : coche chaque journée, tenue ou non. La série compte les jours tenus d'affilée."
+      : `Cible : ${h.target_performance || ""} Session par défaut : ${h.burst_minutes || 20} min.`;
+    $("btn-start").textContent = isDays(h) ? "Cocher aujourd'hui" : "Démarrer une session";
+    $("btn-log").hidden = isDays(h);
+    showPracticeState("idle");
+    $("feedback").textContent = "";
+  }
+
+  function showPracticeState(state) {
+    ["idle", "checklist", "timer", "form"].forEach((s) => { $("practice-" + s).hidden = s !== state; });
+  }
+
+  function renderDeconstruct() {
+    const h = current;
+    const list = (items) => (items || []).map((i) => `<li>${esc(i)}</li>`).join("");
+    $("deconstruct").innerHTML = `
+      <p><b>Pourquoi :</b> ${esc(h.why || "")}</p>
+      <p><b>Niveau cible :</b> ${esc(h.target_performance || "")}</p>
+      <p><b>Objectif :</b> ${isDays(h) ? (h.target_days || 90) + " jours tenus" : (h.target_hours || 20) + " heures par sessions de " + (h.burst_minutes || 20) + " min"}</p>
+      <h3>Sous-compétences</h3><ol>${list(h.subskills)}</ol>
+      <h3>Outils critiques</h3><ul>${list(h.tools)}</ul>
+      <h3>Checklist avant chaque session</h3><ul>${list(h.checklist)}</ul>`;
+    $("science").innerHTML = (h.science || []).map((e) =>
+      `<li>${esc(e.finding)}<span class="src">Source : ${esc(e.source)}</span></li>`).join("") || "<li>Aucune référence enregistrée.</li>";
+  }
+
+  function renderHistory() {
+    const mine = sessions.filter((s) => s.habit === current.id).slice(-15).reverse();
+    if (!mine.length) { $("history").innerHTML = "<tr><td class='muted'>Aucune session pour cette habitude.</td></tr>"; return; }
+    const rows = mine.map((s) => {
+      const idx = sessions.indexOf(s);
+      return `<tr><td>${s.date}<br><span class="muted">${s.time}</span></td><td>${isDays(current) ? "" : s.minutes + " min"}</td>
+        <td>${s.quality}/5</td><td>${isReal(s, current) ? "✔" : "–"}</td><td>${esc(s.note || "")}</td>
+        <td class="del"><button class="ghost" data-idx="${idx}">suppr.</button></td></tr>`;
+    }).join("");
+    $("history").innerHTML = `<tr><th>Date</th><th>Durée</th><th>Qualité</th><th>${isDays(current) ? "Tenu" : "Réussie"}</th><th>Note</th><th></th></tr>${rows}`;
+    $("history").querySelectorAll("button").forEach((b) => b.onclick = () => {
+      if (confirm("Supprimer cette entrée ?")) { sessions.splice(Number(b.dataset.idx), 1); saveSessions(); renderAll(); }
+    });
+  }
+
+  function renderAll() { renderTabs(); renderStatus(); renderDeconstruct(); renderHistory(); }
+
+  function selectHabit(id) {
+    stopTimer();
+    current = config.habits.find((h) => h.id === id) || config.habits[0];
+    try { localStorage.setItem("habits.current", current.id); } catch (e) {}
+    renderAll();
+    renderPractice();
+  }
+
+  // ----- pratique -----
+  function openChecklist() {
+    const h = current;
+    if (isDays(h)) { openForm(0); return; }
+    $("checklist").innerHTML = (h.checklist || []).map((c, i) =>
+      `<label class="check"><input type="checkbox" data-i="${i}"> ${esc(c)}</label>`).join("");
+    $("start-minutes").value = h.burst_minutes || 20;
+    const boxes = $("checklist").querySelectorAll("input");
+    const refresh = () => { $("btn-go").disabled = ![...boxes].every((b) => b.checked); };
+    boxes.forEach((b) => b.onchange = refresh);
+    refresh();
+    showPracticeState("checklist");
+  }
+
+  function startTimer() {
+    const minutes = Math.max(1, Number($("start-minutes").value) || current.burst_minutes || 20);
+    const start = Date.now(), end = start + minutes * 60000;
+    showPracticeState("timer");
+    const tick = () => {
+      const left = Math.max(0, end - Date.now());
+      const m = Math.floor(left / 60000), s = Math.floor((left % 60000) / 1000);
+      $("clock").textContent = `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+      if (left <= 0) { finishTimer(start); }
+    };
+    timer = { start, id: setInterval(tick, 500) };
+    tick();
+  }
+
+  function stopTimer() { if (timer) { clearInterval(timer.id); timer = null; } }
+
+  function finishTimer(start) {
+    stopTimer();
+    beep();
+    const elapsed = Math.max(1, Math.round((Date.now() - start) / 60000));
+    openForm(elapsed);
+  }
+
+  function beep() {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.connect(g); g.connect(ctx.destination); o.frequency.value = 660; g.gain.value = 0.15;
+      o.start(); o.stop(ctx.currentTime + 0.8);
+    } catch (e) {}
+  }
+
+  function openForm(minutes) {
+    const h = current, f = $("practice-form");
+    $("minutes-field").hidden = isDays(h);
+    f.minutes.required = !isDays(h);
+    f.minutes.value = minutes || h.burst_minutes || 20;
+    f.date.value = localIso(new Date());
+    f.note.value = "";
+    f.clean.value = "1";
+    $("clean-question").textContent = h.clean_question || DEFAULT_CLEAN;
+    $("form-intro").textContent = minutes ? `Session de ${minutes} min terminée. Bilan honnête :` : "";
+    const labels = h.quality_labels || DEFAULT_QUALITY;
+    $("quality").innerHTML = [1, 2, 3, 4, 5].map((k) =>
+      `<label class="check"><input type="radio" name="quality" value="${k}" ${k === 4 ? "checked" : ""}> ${k} · ${esc(labels[k] || "")}</label>`).join("");
+    showPracticeState("form");
+  }
+
+  function submitForm(ev) {
+    ev.preventDefault();
+    const h = current, f = $("practice-form");
+    const now = new Date();
+    const s = { habit: h.id, date: f.date.value, time: `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`,
+      minutes: isDays(h) ? 0 : Number(f.minutes.value), quality: Number(f.quality.value), clean: f.clean.value === "1", note: f.note.value.trim() };
+    sessions.push(s);
+    saveSessions();
+    renderAll();
+    showPracticeState("idle");
+    const st = computeStats(h, sessions);
+    const tag = isDays(h) ? (s.clean ? "journée tenue ✔" : "journée notée comme non tenue")
+                          : (isReal(s, h) ? "vraiment réussie ✔" : "comptée, mais pas « vraiment réussie »");
+    $("feedback").textContent = `Enregistré : ${tag}. Total ${fmtAmount(st.total, st.unit)} sur ${fmtAmount(st.target, st.unit)}, série de ${st.streak} jour(s).`;
+  }
+
+  // ----- données -----
+  function exportJson() {
+    const blob = new Blob([JSON.stringify(sessions, null, 2) + "\n"], { type: "application/json" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob); a.download = "sessions.json"; a.click();
+    URL.revokeObjectURL(a.href);
+  }
+  function importJson(file) {
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const incoming = JSON.parse(reader.result);
+        if (!Array.isArray(incoming)) throw new Error("format");
+        const key = (s) => `${s.habit}|${s.date}|${s.time}|${s.minutes}`;
+        const known = new Set(sessions.map(key));
+        let added = 0;
+        incoming.forEach((s) => {
+          if (!s.habit || !s.date) return;
+          if (s.phone_free !== undefined && s.clean === undefined) s.clean = s.phone_free;
+          if (!known.has(key(s))) { sessions.push(s); known.add(key(s)); added++; }
+        });
+        saveSessions(); renderAll();
+        alert(`${added} session(s) importée(s).`);
+      } catch (e) { alert("Fichier illisible : il faut le JSON exporté par cette page ou data/sessions.json."); }
+    };
+    reader.readAsText(file);
+  }
+
+  // ----- init -----
+  async function init() {
+    $("btn-start").onclick = openChecklist;
+    $("btn-log").onclick = () => openForm(0);
+    $("btn-go").onclick = startTimer;
+    $("btn-cancel-1").onclick = () => showPracticeState("idle");
+    $("btn-cancel-2").onclick = () => showPracticeState("idle");
+    $("btn-stop").onclick = () => finishTimer(timer ? timer.start : Date.now());
+    $("practice-form").onsubmit = submitForm;
+    $("btn-export").onclick = exportJson;
+    $("file-import").onchange = (e) => { if (e.target.files[0]) importJson(e.target.files[0]); e.target.value = ""; };
+    $("btn-reset").onclick = () => { if (confirm("Effacer toutes les sessions de ce navigateur ?")) { sessions = []; saveSessions(); renderAll(); } };
+    window.addEventListener("beforeunload", (e) => { if (timer) { e.preventDefault(); e.returnValue = ""; } });
+
+    sessions = loadSessions();
+    try {
+      const res = await fetch("habits.json", { cache: "no-store" });
+      if (!res.ok) throw new Error(res.status);
+      config = await res.json();
+    } catch (e) {
+      $("load-error").hidden = false;
+      $("load-error").innerHTML = "Impossible de charger <code>habits.json</code>. Ouvre la page via GitHub Pages ou lance <code>python -m http.server</code> dans le dossier du projet, puis va sur <code>http://localhost:8000</code>.";
+      return;
+    }
+    $("method-science").innerHTML = (config.method_science || []).map((e) =>
+      `<li>${esc(e.finding)}<span class="src">Source : ${esc(e.source)}</span></li>`).join("");
+    let remembered = null;
+    try { remembered = localStorage.getItem("habits.current"); } catch (e) {}
+    selectHabit(remembered || (config.habits[0] && config.habits[0].id));
+  }
+  init();
+})();
+</script>
+</body>
+</html>

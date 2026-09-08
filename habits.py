@@ -1,15 +1,20 @@
 #!/usr/bin/env python3
 """Traqueur d'habitudes inspiré de « The First 20 Hours » de Josh Kaufman.
 
-Une habitude = une compétence à acquérir en 20 heures de pratique délibérée.
+Une habitude = une compétence à acquérir en 20 heures de pratique délibérée
+(ou, pour les habitudes d'abstinence comme le no fap, en N jours tenus).
 Le script sert à pratiquer par courtes sessions chronométrées, à enregistrer
-chaque session honnêtement et à voir la progression vers les 20 heures.
+chaque session honnêtement et à voir la progression vers l'objectif.
 
 Usage rapide :
     python habits.py start shabbat        # checklist, minuteur, bilan
     python habits.py log shabbat 25       # enregistrer une session après coup
-    python habits.py status               # progression vers les 20 heures
+    python habits.py log nofap --ok       # cocher la journée d'une habitude en jours
+    python habits.py status               # progression de toutes les habitudes
+    python habits.py science shabbat      # ce que disent les études
     python habits.py --help               # toutes les commandes
+
+La page web (index.html) utilise exactement le même format de données.
 """
 from __future__ import annotations
 
@@ -25,17 +30,19 @@ ROOT = Path(os.environ.get("HABITS_DIR", Path(__file__).resolve().parent))
 HABITS_FILE = ROOT / "habits.json"
 SESSIONS_FILE = ROOT / "data" / "sessions.json"
 
-# Une session compte comme « vraiment rien » si le portable est resté hors de
-# portée ET que la qualité ressentie est d'au moins 4 sur 5.
+# Une session compte comme « vraiment réussie » si la contrainte de l'habitude
+# a été respectée (clean) ET que la qualité ressentie est d'au moins 4 sur 5.
+# Pour une habitude en jours (no fap), seule la contrainte compte.
 REAL_QUALITY_MIN = 4
 
-QUALITY_LABELS = {
-    1: "J'ai craqué : portable, écran ou tâche",
-    2: "Agité, j'ai surtout attendu que ça passe",
-    3: "Moitié rien, moitié occupé dans ma tête",
-    4: "Presque rien, quelques réflexes de vouloir faire",
-    5: "Vraiment rien : marcher, regarder, laisser divaguer",
+DEFAULT_QUALITY_LABELS = {
+    1: "J'ai craqué ou abandonné",
+    2: "Difficile, surtout attendu que ça passe",
+    3: "Moitié présent, moitié ailleurs",
+    4: "Bien, quelques dérives vite rattrapées",
+    5: "Pleinement dans l'activité",
 }
+DEFAULT_CLEAN_QUESTION = "La contrainte de l'habitude a été respectée tout le long ?"
 
 WEEKDAYS = ["L", "M", "M", "J", "V", "S", "D"]
 
@@ -43,16 +50,22 @@ WEEKDAYS = ["L", "M", "M", "J", "V", "S", "D"]
 # --------------------------------------------------------------------------- #
 # Stockage
 # --------------------------------------------------------------------------- #
-def load_habits() -> list[dict]:
+def load_config() -> dict:
     if not HABITS_FILE.exists():
-        return []
+        return {"habits": [], "method_science": []}
     with open(HABITS_FILE, encoding="utf-8") as f:
-        return json.load(f).get("habits", [])
+        return json.load(f)
+
+
+def load_habits() -> list[dict]:
+    return load_config().get("habits", [])
 
 
 def save_habits(habits: list[dict]) -> None:
+    config = load_config()
+    config["habits"] = habits
     with open(HABITS_FILE, "w", encoding="utf-8") as f:
-        json.dump({"habits": habits}, f, ensure_ascii=False, indent=2)
+        json.dump(config, f, ensure_ascii=False, indent=2)
         f.write("\n")
 
 
@@ -78,11 +91,22 @@ def get_habit(habit_id: str) -> dict:
     sys.exit(f"Habitude inconnue : « {habit_id} ». Habitudes disponibles : {ids}")
 
 
+def is_days(habit: dict) -> bool:
+    return habit.get("unit", "minutes") == "days"
+
+
+def quality_labels(habit: dict) -> dict[int, str]:
+    custom = habit.get("quality_labels")
+    if custom:
+        return {int(k): v for k, v in custom.items()}
+    return DEFAULT_QUALITY_LABELS
+
+
 def add_session(
     habit_id: str,
     minutes: int,
     quality: int,
-    phone_free: bool,
+    clean: bool,
     note: str = "",
     when: datetime | None = None,
 ) -> dict:
@@ -93,7 +117,7 @@ def add_session(
         "time": when.strftime("%H:%M"),
         "minutes": int(minutes),
         "quality": int(quality),
-        "phone_free": bool(phone_free),
+        "clean": bool(clean),
         "note": note.strip(),
     }
     sessions = load_sessions()
@@ -106,21 +130,37 @@ def add_session(
 # --------------------------------------------------------------------------- #
 # Calculs
 # --------------------------------------------------------------------------- #
-def is_real(session: dict) -> bool:
-    return session["phone_free"] and session["quality"] >= REAL_QUALITY_MIN
+def is_real(session: dict, habit: dict | None = None) -> bool:
+    if habit is not None and is_days(habit):
+        return bool(session["clean"])
+    return bool(session["clean"]) and session["quality"] >= REAL_QUALITY_MIN
 
 
 def compute_stats(habit: dict, sessions: list[dict], today: date | None = None) -> dict:
     today = today or date.today()
+    days_mode = is_days(habit)
     mine = [s for s in sessions if s["habit"] == habit["id"]]
-    total_minutes = sum(s["minutes"] for s in mine)
-    target_minutes = int(habit.get("target_hours", 20) * 60)
-    real = [s for s in mine if is_real(s)]
+    real = [s for s in mine if is_real(s, habit)]
 
-    days_with_session = {date.fromisoformat(s["date"]) for s in mine}
+    if days_mode:
+        # Un jour compte une seule fois, et compte comme tenu si toutes ses
+        # entrées sont « clean ».
+        by_day: dict[date, bool] = {}
+        for s in mine:
+            d = date.fromisoformat(s["date"])
+            by_day[d] = by_day.get(d, True) and bool(s["clean"])
+        kept_days = {d for d, ok in by_day.items() if ok}
+        total = len(kept_days)
+        target = int(habit.get("target_days", 90))
+        streak_days = kept_days
+    else:
+        total = sum(s["minutes"] for s in mine)
+        target = int(habit.get("target_hours", 20) * 60)
+        streak_days = {date.fromisoformat(s["date"]) for s in mine}
+
     streak = 0
-    cursor = today if today in days_with_session else today - timedelta(days=1)
-    while cursor in days_with_session:
+    cursor = today if today in streak_days else today - timedelta(days=1)
+    while cursor in streak_days:
         streak += 1
         cursor -= timedelta(days=1)
 
@@ -132,15 +172,20 @@ def compute_stats(habit: dict, sessions: list[dict], today: date | None = None) 
         day_sessions = [s for s in mine if s["date"] == day.isoformat()]
         if not day_sessions:
             week_grid.append("·")
-        elif any(is_real(s) for s in day_sessions):
+        elif days_mode:
+            week_grid.append("●" if all(s["clean"] for s in day_sessions) else "○")
+        elif any(is_real(s, habit) for s in day_sessions):
             week_grid.append("●")
         else:
             week_grid.append("○")
 
     window_start = today - timedelta(days=13)
-    recent = [s for s in mine if date.fromisoformat(s["date"]) >= window_start]
-    pace_per_day = sum(s["minutes"] for s in recent) / 14
-    remaining = max(target_minutes - total_minutes, 0)
+    if days_mode:
+        recent_total = len({d for d in streak_days if d >= window_start})
+    else:
+        recent_total = sum(s["minutes"] for s in mine if date.fromisoformat(s["date"]) >= window_start)
+    pace_per_day = recent_total / 14
+    remaining = max(target - total, 0)
     if remaining == 0:
         eta = today
     elif pace_per_day > 0:
@@ -149,15 +194,17 @@ def compute_stats(habit: dict, sessions: list[dict], today: date | None = None) 
         eta = None
 
     return {
+        "unit": "days" if days_mode else "minutes",
         "sessions": len(mine),
         "real_sessions": len(real),
-        "total_minutes": total_minutes,
-        "target_minutes": target_minutes,
-        "remaining_minutes": remaining,
-        "percent": min(100.0, 100.0 * total_minutes / target_minutes) if target_minutes else 0.0,
+        "total": total,
+        "target": target,
+        "remaining": remaining,
+        "percent": min(100.0, 100.0 * total / target) if target else 0.0,
         "streak": streak,
         "week_sessions": len(week),
-        "week_minutes": sum(s["minutes"] for s in week),
+        "week_total": len({s["date"] for s in week if s["clean"]}) if days_mode
+        else sum(s["minutes"] for s in week),
         "week_grid": week_grid,
         "pace_per_day": pace_per_day,
         "eta": eta,
@@ -176,6 +223,12 @@ def fmt_hours(minutes: int) -> str:
     return f"{m} min"
 
 
+def fmt_amount(value: int, unit: str) -> str:
+    if unit == "days":
+        return f"{value} jour{'s' if value != 1 else ''}"
+    return fmt_hours(value)
+
+
 def progress_bar(percent: float, width: int = 40) -> str:
     filled = int(round(width * percent / 100))
     return "[" + "#" * filled + "." * (width - filled) + "]"
@@ -190,37 +243,54 @@ def fmt_date(d: date) -> str:
 # --------------------------------------------------------------------------- #
 # Affichage
 # --------------------------------------------------------------------------- #
+def real_label(habit: dict) -> str:
+    return "jours tenus" if is_days(habit) else "« vraiment réussies »"
+
+
 def print_status(habit: dict, sessions: list[dict]) -> None:
     st = compute_stats(habit, sessions)
+    unit = st["unit"]
     print(f"\n{habit['name']}  ({habit['id']})")
-    print(f"{progress_bar(st['percent'])} {fmt_hours(st['total_minutes'])} / "
-          f"{fmt_hours(st['target_minutes'])}  ({st['percent']:.0f} %)")
+    print(f"{progress_bar(st['percent'])} {fmt_amount(st['total'], unit)} / "
+          f"{fmt_amount(st['target'], unit)}  ({st['percent']:.0f} %)")
     if st["sessions"] == 0:
-        print("Aucune session pour l'instant. Lance : python habits.py start", habit["id"])
+        verb = "log" if is_days(habit) else "start"
+        print(f"Aucune entrée pour l'instant. Lance : python habits.py {verb} {habit['id']}")
         return
-    real_pct = 100.0 * st["real_sessions"] / st["sessions"]
-    print(f"Sessions : {st['sessions']}   dont « vraiment rien » : "
-          f"{st['real_sessions']} ({real_pct:.0f} %)")
     grid = " ".join(f"{d}{m}" for d, m in zip(WEEKDAYS, st["week_grid"]))
-    print(f"Série : {st['streak']} jour(s)   Cette semaine : {st['week_sessions']} session(s), "
-          f"{fmt_hours(st['week_minutes'])}   {grid}")
-    if st["remaining_minutes"] == 0:
-        print("Objectif des 20 heures atteint. Fixe un nouveau niveau cible avec `deconstruct`.")
-    elif st["eta"]:
-        print(f"Rythme sur 14 jours : {st['pace_per_day']:.0f} min/jour → "
-              f"objectif atteint vers le {fmt_date(st['eta'])}")
+    if is_days(habit):
+        print(f"Journées cochées : {st['sessions']}   tenues : {st['real_sessions']}")
+        print(f"Série : {st['streak']} jour(s) tenus d'affilée   Cette semaine : "
+              f"{st['week_total']} jour(s) tenus   {grid}")
     else:
-        print("Rythme sur 14 jours : 0 min/jour → pas de projection possible, reprends une session.")
-    print(f"Qualité moyenne : {st['avg_quality']:.1f}/5   Plus longue session : "
-          f"{fmt_hours(st['longest'])}")
+        real_pct = 100.0 * st["real_sessions"] / st["sessions"]
+        print(f"Sessions : {st['sessions']}   dont {real_label(habit)} : "
+              f"{st['real_sessions']} ({real_pct:.0f} %)")
+        print(f"Série : {st['streak']} jour(s)   Cette semaine : {st['week_sessions']} session(s), "
+              f"{fmt_hours(st['week_total'])}   {grid}")
+    if st["remaining"] == 0:
+        print("Objectif atteint. Fixe un nouveau niveau cible dans habits.json.")
+    elif st["eta"]:
+        pace = (f"{st['pace_per_day'] * 7:.1f} jours tenus/semaine" if is_days(habit)
+                else f"{st['pace_per_day']:.0f} min/jour")
+        print(f"Rythme sur 14 jours : {pace} → objectif atteint vers le {fmt_date(st['eta'])}")
+    else:
+        print("Rythme sur 14 jours : rien → pas de projection possible, reprends une session.")
+    extra = "" if is_days(habit) else f"   Plus longue session : {fmt_hours(st['longest'])}"
+    print(f"Qualité moyenne : {st['avg_quality']:.1f}/5{extra}")
 
 
 def print_session_feedback(habit: dict, session: dict) -> None:
     st = compute_stats(habit, load_sessions())
-    tag = "vraiment rien ✔" if is_real(session) else "session comptée, mais pas « vraiment rien »"
-    print(f"\nEnregistré : {session['minutes']} min, qualité {session['quality']}/5, {tag}.")
-    print(f"Total : {fmt_hours(st['total_minutes'])} sur {fmt_hours(st['target_minutes'])} "
-          f"({st['percent']:.0f} %) · {st['real_sessions']} sessions « vraiment rien » sur "
+    unit = st["unit"]
+    if is_days(habit):
+        tag = "journée tenue ✔" if session["clean"] else "journée notée comme non tenue"
+        print(f"\nEnregistré : {session['date']}, qualité {session['quality']}/5, {tag}.")
+    else:
+        tag = "vraiment réussie ✔" if is_real(session, habit) else "comptée, mais pas « vraiment réussie »"
+        print(f"\nEnregistré : {session['minutes']} min, qualité {session['quality']}/5, {tag}.")
+    print(f"Total : {fmt_amount(st['total'], unit)} sur {fmt_amount(st['target'], unit)} "
+          f"({st['percent']:.0f} %) · {st['real_sessions']} {real_label(habit)} sur "
           f"{st['sessions']} · série de {st['streak']} jour(s).")
 
 
@@ -235,9 +305,9 @@ def ask_yes(prompt: str, default: bool = True) -> bool:
     return answer in ("o", "oui", "y", "yes")
 
 
-def ask_quality() -> int:
-    print("\nHonnêtement, cette session c'était :")
-    for k, label in QUALITY_LABELS.items():
+def ask_quality(habit: dict) -> int:
+    print("\nHonnêtement, c'était :")
+    for k, label in quality_labels(habit).items():
         print(f"  {k}  {label}")
     while True:
         answer = input("Qualité (1-5) : ").strip()
@@ -280,8 +350,8 @@ def cmd_list(args: argparse.Namespace) -> None:
     for habit in habits:
         st = compute_stats(habit, sessions)
         print(f"{habit['id']:<12} {progress_bar(st['percent'], 20)} "
-              f"{fmt_hours(st['total_minutes']):>7} / {fmt_hours(st['target_minutes'])}"
-              f"   {st['real_sessions']}/{st['sessions']} vraiment rien")
+              f"{fmt_amount(st['total'], st['unit']):>8} / {fmt_amount(st['target'], st['unit']):<8}"
+              f"  {st['real_sessions']}/{st['sessions']} {real_label(habit)}")
 
 
 def cmd_status(args: argparse.Namespace) -> None:
@@ -301,8 +371,11 @@ def cmd_deconstruct(args: argparse.Namespace) -> None:
     print(f"\n{habit['name']}")
     print(f"\nPourquoi (projet aimé) :\n  {habit.get('why', '—')}")
     print(f"\nNiveau cible (target performance level) :\n  {habit.get('target_performance', '—')}")
-    print(f"\nObjectif : {habit.get('target_hours', 20)} heures, par sessions de "
-          f"{habit.get('burst_minutes', 20)} min.")
+    if is_days(habit):
+        print(f"\nObjectif : {habit.get('target_days', 90)} jours tenus, cochés un par un.")
+    else:
+        print(f"\nObjectif : {habit.get('target_hours', 20)} heures, par sessions de "
+              f"{habit.get('burst_minutes', 20)} min.")
     print("\nSous-compétences (déconstruction) :")
     for i, item in enumerate(habit.get("subskills", []), 1):
         print(f"  {i}. {item}")
@@ -312,11 +385,32 @@ def cmd_deconstruct(args: argparse.Namespace) -> None:
     print("\nChecklist avant chaque session (éliminer les barrières) :")
     for item in habit.get("checklist", []):
         print(f"  [ ] {item}")
-    print()
+    print(f"\nCe que disent les études : python habits.py science {habit['id']}\n")
+
+
+def cmd_science(args: argparse.Namespace) -> None:
+    if args.habit:
+        habit = get_habit(args.habit)
+        entries = habit.get("science", [])
+        title = habit["name"]
+    else:
+        entries = load_config().get("method_science", [])
+        title = "La méthode (pratique délibérée, espacement, formation des habitudes)"
+    print(f"\n{title}\n")
+    if not entries:
+        print("Aucune référence enregistrée pour cette habitude.")
+        return
+    for i, entry in enumerate(entries, 1):
+        print(f"{i}. {entry['finding']}")
+        print(f"   Source : {entry['source']}\n")
 
 
 def cmd_start(args: argparse.Namespace) -> None:
     habit = get_habit(args.habit)
+    if is_days(habit):
+        print(f"« {habit['id']} » se suit en jours : coche la journée avec "
+              f"python habits.py log {habit['id']} --ok (ou --ko).")
+        return
     minutes = args.minutes or habit.get("burst_minutes", 20)
     print(f"\n{habit['name']}")
     print(f"Cible : {habit.get('target_performance', '')}\n")
@@ -327,29 +421,40 @@ def cmd_start(args: argparse.Namespace) -> None:
         print("Ok, règle ce qui manque et relance. Les barrières doivent tomber avant de pratiquer.")
         return
     elapsed = run_timer(minutes)
-    quality = ask_quality()
-    phone_free = ask_yes("Le portable est resté hors de portée tout le long ?")
+    quality = ask_quality(habit)
+    clean = ask_yes(habit.get("clean_question", DEFAULT_CLEAN_QUESTION))
     note = input("Une note (facultatif) : ")
-    session = add_session(habit["id"], elapsed, quality, phone_free, note)
+    session = add_session(habit["id"], elapsed, quality, clean, note)
     print_session_feedback(habit, session)
 
 
 def cmd_log(args: argparse.Namespace) -> None:
     habit = get_habit(args.habit)
-    quality = args.quality if args.quality else ask_quality()
-    if args.phone is None:
-        phone_free = ask_yes("Le portable est resté hors de portée tout le long ?")
+    if is_days(habit):
+        minutes = 0
+    elif args.minutes is None:
+        sys.exit(f"Indique la durée en minutes : python habits.py log {habit['id']} 25")
     else:
-        phone_free = args.phone
+        minutes = args.minutes
+    clean = args.clean
+    if clean is None:
+        clean = ask_yes(habit.get("clean_question", DEFAULT_CLEAN_QUESTION))
+    if args.quality:
+        quality = args.quality
+    elif is_days(habit) and not clean:
+        quality = 1
+    else:
+        quality = ask_quality(habit)
     when = datetime.now()
     if args.date:
         when = datetime.combine(date.fromisoformat(args.date), when.time())
-    session = add_session(habit["id"], args.minutes, quality, phone_free, args.note or "", when)
+    session = add_session(habit["id"], minutes, quality, clean, args.note or "", when)
     print_session_feedback(habit, session)
 
 
 def cmd_history(args: argparse.Namespace) -> None:
     sessions = load_sessions()
+    habits = {h["id"]: h for h in load_habits()}
     if args.habit:
         get_habit(args.habit)
         sessions = [s for s in sessions if s["habit"] == args.habit]
@@ -357,24 +462,29 @@ def cmd_history(args: argparse.Namespace) -> None:
     if not sessions:
         print("Aucune session enregistrée.")
         return
-    print(f"{'date':<10} {'heure':<5} {'habitude':<10} {'min':>4} {'qual':>4} {'rien':>5}  note")
+    print(f"{'date':<10} {'heure':<5} {'habitude':<11} {'min':>4} {'qual':>4} {'ok':>4}  note")
     for s in sessions:
-        mark = "oui" if is_real(s) else "non"
-        print(f"{s['date']:<10} {s['time']:<5} {s['habit']:<10} {s['minutes']:>4} "
-              f"{s['quality']:>4} {mark:>5}  {s['note']}")
+        habit = habits.get(s["habit"])
+        mark = "oui" if is_real(s, habit) else "non"
+        print(f"{s['date']:<10} {s['time']:<5} {s['habit']:<11} {s['minutes']:>4} "
+              f"{s['quality']:>4} {mark:>4}  {s['note']}")
 
 
 def cmd_plan(args: argparse.Namespace) -> None:
     habit = get_habit(args.habit)
     st = compute_stats(habit, load_sessions())
-    remaining = st["remaining_minutes"]
+    remaining = st["remaining"]
     days = args.weeks * 7
-    per_day = remaining / days
-    burst = habit.get("burst_minutes", 20)
     print(f"\n{habit['name']}")
-    print(f"Il reste {fmt_hours(remaining)} pour atteindre {fmt_hours(st['target_minutes'])}.")
-    print(f"Pour finir en {args.weeks} semaine(s) : {per_day:.0f} min/jour, "
-          f"soit environ {per_day / burst:.1f} session(s) de {burst} min par jour.")
+    if is_days(habit):
+        print(f"Il reste {remaining} jour(s) tenus pour atteindre {st['target']} jours.")
+        print(f"Au mieux, sans aucun écart, c'est le {fmt_date(date.today() + timedelta(days=remaining))}.")
+    else:
+        per_day = remaining / days
+        burst = habit.get("burst_minutes", 20)
+        print(f"Il reste {fmt_hours(remaining)} pour atteindre {fmt_hours(st['target'])}.")
+        print(f"Pour finir en {args.weeks} semaine(s) : {per_day:.0f} min/jour, "
+              f"soit environ {per_day / burst:.1f} session(s) de {burst} min par jour.")
     print("Kaufman : bloque ce créneau dans l'agenda maintenant, sinon il n'existera pas.\n")
 
 
@@ -387,17 +497,25 @@ def cmd_add(args: argparse.Namespace) -> None:
     habit = {
         "id": habit_id,
         "name": args.name or input("Nom complet : ").strip(),
+        "unit": "days" if args.days else "minutes",
         "why": input("Pourquoi tu y tiens vraiment : ").strip(),
         "target_performance": input("À quoi ressemble « assez bon » pour toi (observable, concret) : ").strip(),
-        "target_hours": args.target_hours,
-        "burst_minutes": args.burst,
+        "clean_question": input("Question oui/non posée après chaque session (la contrainte à respecter) : ").strip()
+        or DEFAULT_CLEAN_QUESTION,
         "subskills": [s.strip() for s in input("Sous-compétences (séparées par ;) : ").split(";") if s.strip()],
         "tools": [s.strip() for s in input("Outils nécessaires (séparés par ;) : ").split(";") if s.strip()],
         "checklist": [s.strip() for s in input("Checklist avant session (séparée par ;) : ").split(";") if s.strip()],
+        "science": [],
     }
+    if args.days:
+        habit["target_days"] = args.days
+    else:
+        habit["target_hours"] = args.target_hours
+        habit["burst_minutes"] = args.burst
     habits.append(habit)
     save_habits(habits)
-    print(f"\nHabitude « {habit_id} » créée. Première session : python habits.py start {habit_id}")
+    verb = "log" if args.days else "start"
+    print(f"\nHabitude « {habit_id} » créée. Première session : python habits.py {verb} {habit_id}")
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -409,7 +527,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     sub.add_parser("list", help="Liste des habitudes et progression").set_defaults(func=cmd_list)
 
-    p = sub.add_parser("status", help="Progression détaillée vers les 20 heures")
+    p = sub.add_parser("status", help="Progression détaillée")
     p.add_argument("habit", nargs="?")
     p.set_defaults(func=cmd_status)
 
@@ -417,19 +535,23 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("habit")
     p.set_defaults(func=cmd_deconstruct)
 
+    p = sub.add_parser("science", help="Études sur l'habitude (sans argument : sur la méthode)")
+    p.add_argument("habit", nargs="?")
+    p.set_defaults(func=cmd_science)
+
     p = sub.add_parser("start", help="Checklist puis minuteur puis bilan")
     p.add_argument("habit")
     p.add_argument("-m", "--minutes", type=int, help="Durée du minuteur (défaut : burst de l'habitude)")
     p.set_defaults(func=cmd_start)
 
-    p = sub.add_parser("log", help="Enregistrer une session faite sans le minuteur")
+    p = sub.add_parser("log", help="Enregistrer une session (ou cocher une journée)")
     p.add_argument("habit")
-    p.add_argument("minutes", type=int)
+    p.add_argument("minutes", type=int, nargs="?", help="Durée en minutes (inutile pour une habitude en jours)")
     p.add_argument("-q", "--quality", type=int, choices=[1, 2, 3, 4, 5])
-    p.add_argument("--phone-free", dest="phone", action="store_true", default=None,
-                   help="Le portable est resté hors de portée")
-    p.add_argument("--phone-used", dest="phone", action="store_false",
-                   help="Le portable a été touché")
+    p.add_argument("--ok", dest="clean", action="store_true", default=None,
+                   help="Contrainte respectée (portable loin, journée tenue…)")
+    p.add_argument("--ko", dest="clean", action="store_false",
+                   help="Contrainte non respectée")
     p.add_argument("-n", "--note")
     p.add_argument("-d", "--date", help="AAAA-MM-JJ si la session date d'un autre jour")
     p.set_defaults(func=cmd_log)
@@ -449,6 +571,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--name")
     p.add_argument("--target-hours", type=float, default=20)
     p.add_argument("--burst", type=int, default=20)
+    p.add_argument("--days", type=int, help="Habitude suivie en jours tenus (ex: --days 90)")
     p.set_defaults(func=cmd_add)
 
     return parser

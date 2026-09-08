@@ -3,10 +3,19 @@
     {
       "id": "shabbat",
       "name": "Mode Shabbat : ne rien faire",
+      "unit": "minutes",
       "why": "Retrouver la capacité de ne rien faire sans portable : marcher, regarder, laisser mes pensées divaguer. C'est le projet que j'ai vraiment envie de réussir.",
       "target_performance": "Tenir 45 minutes d'affilée sans portable, sans écran, sans musique ni podcast, sans tâche : juste marcher ou regarder, et laisser mes pensées divaguer sans craquer.",
       "target_hours": 20,
       "burst_minutes": 20,
+      "clean_question": "Le portable est resté hors de portée tout le long ?",
+      "quality_labels": {
+        "1": "J'ai craqué : portable, écran ou tâche",
+        "2": "Agité, j'ai surtout attendu que ça passe",
+        "3": "Moitié rien, moitié occupé dans ma tête",
+        "4": "Presque rien, quelques réflexes de vouloir faire",
+        "5": "Vraiment rien : marcher, regarder, laisser divaguer"
+      },
       "subskills": [
         "Poser le portable dans une autre pièce (ou l'éteindre) avant de commencer",
         "Marcher sans destination ni objectif",
@@ -25,7 +34,308 @@
         "Personne ne m'attend pendant les prochaines minutes",
         "Je sais où je vais marcher ou où je vais m'asseoir",
         "Je ne cherche rien à obtenir de cette session : juste être là"
+      ],
+      "science": [
+        {
+          "finding": "Ne rien faire n'éteint pas le cerveau : au repos, le « réseau du mode par défaut » s'active. Il est impliqué dans la mémoire autobiographique, la projection dans le futur et la compréhension des autres.",
+          "source": "Raichle et al. (2001), A default mode of brain function, PNAS 98(2) ; Immordino-Yang, Christodoulou & Singh (2012), Rest is not idleness, Perspectives on Psychological Science 7(4)."
+        },
+        {
+          "finding": "Laisser ses pensées divaguer pendant une pause améliore ensuite la résolution créative des problèmes laissés en suspens, plus qu'une pause occupée par une tâche exigeante.",
+          "source": "Baird et al. (2012), Inspired by distraction: mind wandering facilitates creative incubation, Psychological Science 23(10)."
+        },
+        {
+          "finding": "Quelques minutes de repos éveillé sans stimulation (yeux fermés, pièce sombre) après un apprentissage renforcent la mémoire, encore mesurable une semaine plus tard.",
+          "source": "Dewar et al. (2012), Brief wakeful resting boosts new memories over the long term, Psychological Science 23(9)."
+        },
+        {
+          "finding": "Rester seul avec ses pensées est une compétence, pas un état naturel : la plupart des participants trouvent 6 à 15 minutes sans stimulation désagréables, et certains préfèrent s'administrer un choc électrique plutôt que de ne rien faire.",
+          "source": "Wilson et al. (2014), Just think: the challenges of the disengaged mind, Science 345(6192)."
+        },
+        {
+          "finding": "La simple présence du smartphone, même éteint et retourné sur la table, réduit la capacité cognitive disponible. L'effet disparaît quand il est dans une autre pièce. D'où la checklist.",
+          "source": "Ward et al. (2017), Brain drain: the mere presence of one's own smartphone reduces available cognitive capacity, Journal of the Association for Consumer Research 2(2)."
+        },
+        {
+          "finding": "Une marche de 90 minutes en nature réduit la rumination et l'activité d'une région cérébrale associée à la dépression (cortex préfrontal subgénual), contrairement à la même marche en ville.",
+          "source": "Bratman et al. (2015), Nature experience reduces rumination and subgenual prefrontal cortex activation, PNAS 112(28)."
+        },
+        {
+          "finding": "Marcher dans un parc, ou même regarder des photos de nature, restaure l'attention dirigée et la mémoire de travail. Une marche en centre-ville ne le fait pas.",
+          "source": "Berman, Jonides & Kaplan (2008), The cognitive benefits of interacting with nature, Psychological Science 19(12)."
+        },
+        {
+          "finding": "S'ennuyer volontairement (par exemple recopier un annuaire) augmente ensuite la créativité sur une tâche de pensée divergente.",
+          "source": "Mann & Cadman (2014), Does being bored make us more creative?, Creativity Research Journal 26(2)."
+        }
       ]
+    },
+    {
+      "id": "monotache",
+      "name": "Mono-tâche : une seule chose à la fois",
+      "unit": "minutes",
+      "why": "Retrouver des blocs de travail profond sans onglets, sans notifications, sans changer de tâche toutes les trois minutes.",
+      "target_performance": "Tenir 50 minutes sur une seule tâche, une seule fenêtre ouverte, portable dans une autre pièce, sans consulter ni mail ni messagerie.",
+      "target_hours": 20,
+      "burst_minutes": 25,
+      "clean_question": "Aucune autre tâche, onglet ou notification consultée pendant la session ?",
+      "quality_labels": {
+        "1": "J'ai switché sans arrêt, la tâche n'a pas avancé",
+        "2": "Beaucoup d'interruptions, peu de profondeur",
+        "3": "Quelques dérives, mais un vrai bloc de travail",
+        "4": "Concentré, une ou deux tentations repoussées",
+        "5": "Immersion totale sur une seule chose"
+      },
+      "subskills": [
+        "Choisir une seule tâche et l'écrire avant de commencer",
+        "Fermer tout ce qui ne sert pas à cette tâche (onglets, messagerie)",
+        "Couper les notifications et éloigner le portable",
+        "Noter sur papier ce qui surgit (idée, chose à faire) au lieu d'y aller",
+        "Reprendre la tâche après une dérive sans se juger"
+      ],
+      "tools": [
+        "Un minuteur (ce script ou un minuteur physique)",
+        "Une feuille pour noter les distractions qui surgissent",
+        "Un mode « ne pas déranger » configuré à l'avance"
+      ],
+      "checklist": [
+        "La tâche unique est écrite noir sur blanc",
+        "Une seule fenêtre ou un seul document ouvert",
+        "Notifications coupées, portable hors de portée",
+        "Feuille de distractions à portée de main"
+      ],
+      "science": [
+        {
+          "finding": "Les gros consommateurs de multitâche médiatique sont moins bons pour filtrer les informations non pertinentes et pour passer d'une tâche à l'autre. Le multitâche n'entraîne pas au multitâche.",
+          "source": "Ophir, Nass & Wagner (2009), Cognitive control in media multitaskers, PNAS 106(37)."
+        },
+        {
+          "finding": "Chaque changement de tâche a un coût de bascule mesurable en temps, d'autant plus élevé que les tâches sont complexes ou peu familières.",
+          "source": "Rubinstein, Meyer & Evans (2001), Executive control of cognitive processes in task switching, Journal of Experimental Psychology: Human Perception and Performance 27(4)."
+        },
+        {
+          "finding": "Le travail interrompu est certes terminé, mais au prix d'un stress, d'une frustration et d'une pression temporelle nettement plus élevés.",
+          "source": "Mark, Gudith & Klocke (2008), The cost of interrupted work: more speed and stress, CHI 2008."
+        },
+        {
+          "finding": "Recevoir une notification, même sans la consulter, dégrade la performance sur une tâche d'attention autant que l'utilisation du téléphone lui-même.",
+          "source": "Stothart, Mitchum & Yehnert (2015), The attentional cost of receiving a cell phone notification, Journal of Experimental Psychology: Human Perception and Performance 41(4)."
+        },
+        {
+          "finding": "Revue de la littérature : le multitâche médiatique intensif est associé à une moins bonne attention soutenue et une moins bonne mémoire de travail.",
+          "source": "Uncapher & Wagner (2018), Minds and brains of media multitaskers, PNAS 115(40)."
+        }
+      ]
+    },
+    {
+      "id": "meditation",
+      "name": "Méditation",
+      "unit": "minutes",
+      "why": "Apprendre à observer mes pensées au lieu d'être emporté par elles, et retrouver de la stabilité d'attention.",
+      "target_performance": "Méditer 20 minutes assis, en revenant au souffle à chaque fois que l'esprit part, sans regarder l'heure et sans abandonner.",
+      "target_hours": 20,
+      "burst_minutes": 10,
+      "clean_question": "Tu es resté assis jusqu'à la fin, sans regarder le temps ni interrompre ?",
+      "quality_labels": {
+        "1": "J'ai abandonné ou passé le temps ailleurs",
+        "2": "Parti très loin, peu de retours au souffle",
+        "3": "Mi-présent, mi-perdu dans les pensées",
+        "4": "Présent la plupart du temps, retours réguliers",
+        "5": "Stable, calme, attention posée"
+      },
+      "subskills": [
+        "S'asseoir droit et confortable sans bouger",
+        "Sentir le souffle à un point précis (narines, ventre)",
+        "Remarquer qu'on est parti et revenir, sans commentaire",
+        "Étiqueter brièvement ce qui surgit (pensée, son, sensation)",
+        "Tenir la durée sans regarder l'heure"
+      ],
+      "tools": [
+        "Un coussin ou une chaise stable",
+        "Un minuteur avec un son doux à la fin",
+        "Toujours le même endroit, la même heure"
+      ],
+      "checklist": [
+        "Portable en mode avion, minuteur lancé",
+        "Posture installée, dos droit",
+        "Durée décidée avant de commencer",
+        "Rien à faire pendant ce temps : juste revenir au souffle"
+      ],
+      "science": [
+        {
+          "finding": "Méta-analyse de 47 essais randomisés : les programmes de pleine conscience améliorent modérément l'anxiété, la dépression et la douleur. Pas de preuve pour les bénéfices plus spectaculaires parfois annoncés.",
+          "source": "Goyal et al. (2014), Meditation programs for psychological stress and well-being: a systematic review and meta-analysis, JAMA Internal Medicine 174(3)."
+        },
+        {
+          "finding": "Huit semaines de pratique (environ 27 minutes par jour) augmentent la densité de matière grise dans l'hippocampe et des régions liées à l'apprentissage, la mémoire et la régulation émotionnelle.",
+          "source": "Hölzel et al. (2011), Mindfulness practice leads to increases in regional brain gray matter density, Psychiatry Research: Neuroimaging 191(1)."
+        },
+        {
+          "finding": "Quatre jours de 20 minutes de méditation suffisent déjà à améliorer l'attention soutenue, la mémoire de travail et les fonctions exécutives, comparé à l'écoute d'un livre audio.",
+          "source": "Zeidan et al. (2010), Mindfulness meditation improves cognition: evidence of brief mental training, Consciousness and Cognition 19(2)."
+        },
+        {
+          "finding": "Les méditants expérimentés montrent moins d'activité dans le réseau du mode par défaut (moins de rumination centrée sur soi) et un meilleur couplage avec les régions de contrôle de l'attention.",
+          "source": "Brewer et al. (2011), Meditation experience is associated with differences in default mode network activity and connectivity, PNAS 108(50)."
+        },
+        {
+          "finding": "Revue en neurosciences : effets documentés sur l'attention, la régulation des émotions et la conscience de soi, avec la réserve que beaucoup d'études ont de petits échantillons.",
+          "source": "Tang, Hölzel & Posner (2015), The neuroscience of mindfulness meditation, Nature Reviews Neuroscience 16(4)."
+        }
+      ]
+    },
+    {
+      "id": "nofap",
+      "name": "No fap : reprendre le contrôle",
+      "unit": "days",
+      "why": "Sortir d'un usage compulsif et automatique, et récupérer le temps, l'énergie et l'attention qui partent dedans.",
+      "target_performance": "Quatre-vingt-dix jours tenus. L'objectif observable est l'absence de consommation compulsive, et une envie qui passe sans y céder.",
+      "target_days": 90,
+      "clean_question": "Journée tenue, sans consommation ?",
+      "quality_labels": {
+        "1": "J'ai craqué",
+        "2": "Tenu de justesse, envies très fortes toute la journée",
+        "3": "Tenu, quelques envies gérées",
+        "4": "Tenu facilement, une ou deux pensées passagères",
+        "5": "Tenu sans y penser"
+      },
+      "subskills": [
+        "Repérer les déclencheurs (ennui, soir tard, portable au lit)",
+        "Laisser passer une envie sans agir : elle monte, plafonne, redescend",
+        "Remplacer le réflexe par une action physique (marche, douche, pompes)",
+        "Ne pas emporter le portable au lit",
+        "Repartir le lendemain après un écart sans tout abandonner"
+      ],
+      "tools": [
+        "Un bloqueur de contenu sur le téléphone et l'ordinateur",
+        "Une activité de remplacement prête à l'avance",
+        "Ce journal quotidien pour ne pas mentir sur les chiffres"
+      ],
+      "checklist": [
+        "Portable hors de la chambre le soir",
+        "Bloqueur actif sur tous les appareils",
+        "Activité de remplacement identifiée pour les moments à risque"
+      ],
+      "science": [
+        {
+          "finding": "État honnête des preuves : l'abstinence en elle-même n'a pas d'effet démontré sur la testostérone à long terme ni sur les performances. Le bénéfice documenté concerne la sortie d'un usage compulsif, pas une « super-puissance ».",
+          "source": "Synthèse des références ci-dessous. La seule étude hormonale souvent citée est Jiang et al. (2003), Journal of Zhejiang University Science 4(2) : 28 hommes, pic de testostérone au 7e jour puis retour à la normale, jamais répliquée."
+        },
+        {
+          "finding": "Le nombre d'heures de pornographie par semaine est corrélé à un plus petit volume du striatum (circuit de la récompense) et à une réponse plus faible aux stimuli sexuels. Étude corrélationnelle : elle ne dit pas ce qui cause quoi.",
+          "source": "Kühn & Gallinat (2014), Brain structure and functional connectivity associated with pornography consumption, JAMA Psychiatry 71(7)."
+        },
+        {
+          "finding": "Depuis 2019, l'OMS reconnaît le « trouble du comportement sexuel compulsif » (CIM-11, 6C72) : la perte de contrôle répétée est une entité clinique réelle qui se traite.",
+          "source": "Organisation mondiale de la santé (2019), Classification internationale des maladies, 11e révision, code 6C72."
+        },
+        {
+          "finding": "Une grande partie du sentiment d'être « accro » s'explique par le conflit entre l'usage et ses propres valeurs, plus que par la quantité consommée. Suivre honnêtement ses jours aide à distinguer les deux.",
+          "source": "Grubbs et al. (2019), Pornography problems due to moral incongruence: an integrative model with a systematic review and meta-analysis, Archives of Sexual Behavior 48(2)."
+        },
+        {
+          "finding": "Le lien souvent affirmé entre pornographie et troubles de l'érection n'est pas établi : une étude en laboratoire trouve au contraire une meilleure réactivité sexuelle chez les consommateurs.",
+          "source": "Prause & Pfaus (2015), Viewing sexual stimuli associated with greater sexual responsiveness, not erectile dysfunction, Sexual Medicine 3(2)."
+        },
+        {
+          "finding": "Former une habitude automatique prend en médiane 66 jours, avec un écart de 18 à 254 jours selon les personnes et les comportements. Un écart isolé ne remet pas le compteur à zéro dans le cerveau.",
+          "source": "Lally et al. (2010), How are habits formed: modelling habit formation in the real world, European Journal of Social Psychology 40(6)."
+        }
+      ]
+    },
+    {
+      "id": "lecture",
+      "name": "Lecture profonde",
+      "unit": "minutes",
+      "why": "Retrouver la capacité de lire un livre papier longtemps, sans sauter de paragraphe ni attraper le portable.",
+      "target_performance": "Lire 45 minutes d'affilée un livre papier, sans portable à portée, en suivant l'argument ou l'histoire sans relire trois fois la même page.",
+      "target_hours": 20,
+      "burst_minutes": 25,
+      "clean_question": "Lecture sans interruption ni portable ?",
+      "subskills": [
+        "Choisir un livre qu'on a vraiment envie de lire",
+        "Lire sans relire ni sauter, en acceptant de ne pas tout retenir",
+        "Remarquer le décrochage et revenir à la ligne",
+        "Fermer le livre sur une note d'une phrase"
+      ],
+      "tools": [
+        "Un livre papier, un marque-page",
+        "Un fauteuil et une lampe dédiés",
+        "Une note d'une ligne par session"
+      ],
+      "checklist": [
+        "Portable dans une autre pièce",
+        "Livre et marque-page à la page",
+        "Durée décidée avant d'ouvrir"
+      ],
+      "science": [
+        {
+          "finding": "Lire un roman sur plusieurs soirs augmente la connectivité du cortex temporal gauche (langage) et de régions sensori-motrices, et l'effet persiste plusieurs jours après la fin du livre.",
+          "source": "Berns et al. (2013), Short- and long-term effects of a novel on connectivity in the brain, Brain Connectivity 3(6)."
+        },
+        {
+          "finding": "Sur 12 ans de suivi de plus de 3 600 adultes, lire des livres est associé à une mortalité plus faible, indépendamment du niveau d'éducation et de revenu. Association, pas preuve de causalité.",
+          "source": "Bavishi, Slade & Levy (2016), A chapter a day: association of book reading with longevity, Social Science & Medicine 164."
+        },
+        {
+          "finding": "Lire de la fiction littéraire améliore à court terme la lecture des émotions d'autrui. Résultat médiatisé mais fragile : les tentatives de réplication ont donné des résultats mitigés.",
+          "source": "Kidd & Castano (2013), Reading literary fiction improves theory of mind, Science 342(6156) ; réplication contrastée : Panero et al. (2016), Journal of Personality and Social Psychology 111(5)."
+        }
+      ]
+    },
+    {
+      "id": "journal",
+      "name": "Journal : écrire ce qui se passe",
+      "unit": "minutes",
+      "why": "Mettre des mots sur ce qui tourne en boucle pour l'apaiser, et garder une trace honnête de ce que je vis.",
+      "target_performance": "Écrire 15 minutes sans s'arrêter, à la main, sur ce qui me préoccupe vraiment, sans relire ni corriger.",
+      "target_hours": 20,
+      "burst_minutes": 10,
+      "clean_question": "Écrit sans t'arrêter et sans relire ?",
+      "subskills": [
+        "Écrire sans lever le stylo, même « je ne sais pas quoi écrire »",
+        "Nommer précisément l'émotion et son déclencheur",
+        "Ne pas relire ni corriger pendant la session",
+        "Terminer par une phrase sur ce qu'on fait ensuite"
+      ],
+      "tools": [
+        "Un carnet et un stylo agréables",
+        "Un minuteur",
+        "Un endroit où personne ne lit par-dessus l'épaule"
+      ],
+      "checklist": [
+        "Carnet ouvert, stylo en main",
+        "Portable ailleurs",
+        "Un sujet ou une émotion choisie pour démarrer"
+      ],
+      "science": [
+        {
+          "finding": "Écrire 15 minutes par jour pendant quatre jours sur une expérience difficile réduit les visites médicales dans les mois qui suivent, comparé à écrire sur des sujets neutres.",
+          "source": "Pennebaker & Beall (1986), Confronting a traumatic event: toward an understanding of inhibition and disease, Journal of Abnormal Psychology 95(3)."
+        },
+        {
+          "finding": "Revue des études d'écriture expressive : effets modestes mais répétés sur l'humeur, certains marqueurs immunitaires et le nombre de consultations médicales.",
+          "source": "Baikie & Wilhelm (2005), Emotional and physical health benefits of expressive writing, Advances in Psychiatric Treatment 11(5)."
+        },
+        {
+          "finding": "Mettre un mot sur une émotion (« étiquetage affectif ») réduit l'activité de l'amygdale et engage le cortex préfrontal : nommer, c'est déjà réguler.",
+          "source": "Lieberman et al. (2007), Putting feelings into words: affect labeling disrupts amygdala activity in response to affective stimuli, Psychological Science 18(5)."
+        }
+      ]
+    }
+  ],
+  "method_science": [
+    {
+      "finding": "Ce qui fait progresser, c'est la pratique délibérée : une tâche précise, un peu au-dessus de son niveau, avec un retour immédiat. Pas le temps passé en soi.",
+      "source": "Ericsson, Krampe & Tesch-Römer (1993), The role of deliberate practice in the acquisition of expert performance, Psychological Review 100(3)."
+    },
+    {
+      "finding": "Des sessions courtes réparties dans le temps sont bien plus efficaces que la même durée concentrée en une fois (effet d'espacement, méta-analyse de 254 études).",
+      "source": "Cepeda et al. (2006), Distributed practice in verbal recall tasks: a review and quantitative synthesis, Psychological Bulletin 132(3)."
+    },
+    {
+      "finding": "Une habitude devient automatique en 66 jours en médiane (18 à 254 jours selon les cas). Sauter un jour n'annule pas le processus.",
+      "source": "Lally et al. (2010), How are habits formed: modelling habit formation in the real world, European Journal of Social Psychology 40(6)."
     }
   ]
 }
