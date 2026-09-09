@@ -1,0 +1,18 @@
+{
+  "name": "20 heures — traqueur d'habitudes",
+  "short_name": "20 heures",
+  "description": "Ne rien faire, une seule chose à la fois : traqueur d'habitudes façon The First 20 Hours.",
+  "lang": "fr",
+  "dir": "ltr",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f6f4ee",
+  "theme_color": "#2f6f5e",
+  "categories": ["health", "lifestyle", "productivity"],
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "icon-maskable.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" }
+  ]
+}
