@@ -3,6 +3,7 @@ name: apk
 on:
   push:
     branches: [main]
+  pull_request:
     paths:
       - 'index.html'
       - 'habits.json'
@@ -44,7 +45,7 @@ jobs:
       - name: Stage APK for upload
         run: |
           mkdir -p dist
-          cp android/app/build/outputs/apk/release/app-release.apk "dist/vingt-heures.apk"
+          cp android/app/build/outputs/apk/release/app-release.apk dist/vingt-heures.apk
           ls -la dist
 
       - uses: actions/upload-artifact@v4
@@ -53,8 +54,9 @@ jobs:
           path: dist/vingt-heures.apk
           if-no-files-found: error
 
+      # Only publish the rolling release when the commit is on main (post-merge).
       - name: Publish rolling release with the APK
-        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+        if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
         uses: softprops/action-gh-release@v2
         with:
           tag_name: apk-latest
