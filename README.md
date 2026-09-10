@@ -38,6 +38,26 @@ l'historique dans le dépôt, et **Importer** le recharge sur un autre appareil.
 En local sans GitHub Pages : `python -m http.server` dans le dossier, puis
 `http://localhost:8000`.
 
+
+## Installer l'app Android (APK)
+
+Le workflow `.github/workflows/apk.yml` builde une APK Android à chaque push
+sur `main` qui touche l'appli, et la publie dans la release GitHub `apk-latest`.
+
+Télécharge la dernière APK ici : [Releases → apk-latest](https://github.com/ahaddad75/Beautiful-Soup-Tutorial/releases/tag/apk-latest).
+
+**Installation sur le téléphone** :
+1. Télécharge `vingt-heures.apk` sur l'Android.
+2. Ouvre le fichier depuis l'app *Fichiers* (ou le gestionnaire de téléchargements).
+3. Android demande d'autoriser « Installer des apps de sources inconnues » pour l'app *Fichiers* — accepte.
+4. L'appli apparaît sur l'écran d'accueil avec l'icône verte, comme n'importe quelle app.
+
+L'APK embarque toute l'appli : elle marche sans connexion, avec les mêmes
+sessions et le même minuteur que la page web. Les données restent dans le
+téléphone (localStorage de la WebView). L'appli et la page web ne partagent pas
+les données ; utilise **Exporter sessions.json** dans l'une, **Importer** dans
+l'autre pour transférer l'historique.
+
 ## Utiliser dans un terminal (script Python)
 
 ```bash
