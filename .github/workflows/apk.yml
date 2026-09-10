@@ -1,0 +1,75 @@
+name: apk
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    paths:
+      - 'index.html'
+      - 'habits.json'
+      - 'manifest.webmanifest'
+      - 'sw.js'
+      - 'icon.svg'
+      - 'icon-maskable.svg'
+      - 'android/**'
+      - '.github/workflows/apk.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Copy the web app into the Android assets
+        run: |
+          mkdir -p android/app/src/main/assets
+          cp index.html habits.json manifest.webmanifest sw.js icon.svg icon-maskable.svg android/app/src/main/assets/
+          ls -la android/app/src/main/assets
+
+      - name: Build APK (assembleRelease)
+        working-directory: android
+        run: |
+          gradle --no-daemon --stacktrace assembleRelease
+          ls -la app/build/outputs/apk/release
+
+      - name: Stage APK for upload
+        run: |
+          mkdir -p dist
+          cp android/app/build/outputs/apk/release/app-release.apk dist/vingt-heures.apk
+          ls -la dist
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: vingt-heures-apk
+          path: dist/vingt-heures.apk
+          if-no-files-found: error
+
+      # Only publish the rolling release when the commit is on main (post-merge).
+      - name: Publish rolling release with the APK
+        if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: apk-latest
+          name: "Traqueur 20 heures — APK Android"
+          body: |
+            APK Android à installer par sideload (WebView, mode hors-ligne).
+
+            **Installation :**
+            1. Télécharge `vingt-heures.apk` depuis cette page.
+            2. Sur ton Android, ouvre-le depuis l'app *Fichiers*.
+            3. Autorise « Installer des apps de sources inconnues » pour l'app *Fichiers* (Android le propose la première fois).
+            4. L'appli s'ouvre depuis l'écran d'accueil, comme n'importe quelle app.
+
+            Reconstruite à chaque push sur `main` qui touche l'appli ou le projet Android.
+          files: dist/vingt-heures.apk
+          fail_on_unmatched_files: true

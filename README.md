@@ -19,9 +19,17 @@ Deux façons de l'utiliser, avec le même format de données :
 
 ## Utiliser depuis GitHub (page web)
 
-1. Sur GitHub : *Settings → Pages → Build and deployment → Source : Deploy from a branch*, branche `main`, dossier `/ (root)`, puis *Save*.
-2. Après une minute, la page est en ligne sur `https://ahaddad75.github.io/Beautiful-Soup-Tutorial/`.
-3. Ajoute-la à l'écran d'accueil du téléphone : elle fonctionne comme une petite appli.
+Le workflow `.github/workflows/pages.yml` publie le site sur GitHub Pages à
+chaque push sur `main`, et tente d'activer Pages tout seul la première fois.
+La page est ensuite en ligne sur `https://ahaddad75.github.io/Beautiful-Soup-Tutorial/`.
+
+Si ce premier déploiement échoue avec une erreur d'activation, une seule
+manipulation suffit : *Settings → Pages → Build and deployment → Source :
+GitHub Actions*, puis relancer le workflow depuis l'onglet *Actions*.
+
+Sur mobile : menu du navigateur → **Ajouter à l'écran d'accueil**. L'appli
+s'ouvre alors en plein écran et fonctionne hors-ligne (manifeste + service
+worker, comme l'appli Respire).
 
 Les sessions sont enregistrées dans le navigateur (localStorage). Le bouton
 **Exporter** produit un `sessions.json` à commiter dans `data/` pour garder
@@ -29,6 +37,26 @@ l'historique dans le dépôt, et **Importer** le recharge sur un autre appareil.
 
 En local sans GitHub Pages : `python -m http.server` dans le dossier, puis
 `http://localhost:8000`.
+
+
+## Installer l'app Android (APK)
+
+Le workflow `.github/workflows/apk.yml` builde une APK Android à chaque push
+sur `main` qui touche l'appli, et la publie dans la release GitHub `apk-latest`.
+
+Télécharge la dernière APK ici : [Releases → apk-latest](https://github.com/ahaddad75/Beautiful-Soup-Tutorial/releases/tag/apk-latest).
+
+**Installation sur le téléphone** :
+1. Télécharge `vingt-heures.apk` sur l'Android.
+2. Ouvre le fichier depuis l'app *Fichiers* (ou le gestionnaire de téléchargements).
+3. Android demande d'autoriser « Installer des apps de sources inconnues » pour l'app *Fichiers* — accepte.
+4. L'appli apparaît sur l'écran d'accueil avec l'icône verte, comme n'importe quelle app.
+
+L'APK embarque toute l'appli : elle marche sans connexion, avec les mêmes
+sessions et le même minuteur que la page web. Les données restent dans le
+téléphone (localStorage de la WebView). L'appli et la page web ne partagent pas
+les données ; utilise **Exporter sessions.json** dans l'une, **Importer** dans
+l'autre pour transférer l'historique.
 
 ## Utiliser dans un terminal (script Python)
 
@@ -154,11 +182,12 @@ l'attention.
 
 ## Fichiers
 
-- `index.html` : la page web, sans dépendance, servie par GitHub Pages.
+- `index.html`, `manifest.webmanifest`, `sw.js`, `icon*.svg` : la page web (PWA installable, hors-ligne), servie par GitHub Pages.
 - `habits.py` : le script terminal, Python 3.10+ et bibliothèque standard uniquement.
 - `habits.json` : les habitudes (cible, sous-compétences, outils, checklist, études) et les références sur la méthode.
 - `data/sessions.json` : le journal des sessions, versionné volontairement.
 - `tests/test_habits.py` : tests unitaires, lancés par GitHub Actions à chaque push (`python -m unittest discover -s tests`).
+- `.github/workflows/pages.yml` : déploiement GitHub Pages à chaque push sur `main`.
 
 La variable d'environnement `HABITS_DIR` permet de pointer le script vers un
 autre dossier de données, utile pour tester sans toucher au vrai journal.
